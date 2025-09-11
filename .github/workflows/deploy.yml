@@ -1,0 +1,52 @@
+# A friendly name for our robot's task list
+name: Build and Deploy to Hostinger
+
+# --- TRIGGER ---
+# This tells the robot WHEN to start working.
+on:
+  push:
+    branches: [ "main" ] # Run only when code is pushed to the "main" branch.
+
+# --- TO-DO LIST ---
+# This is the list of jobs for the robot.
+jobs:
+  build-and-deploy:
+    # Tell the robot to use a fresh, clean computer (Ubuntu Linux) for its work.
+    runs-on: ubuntu-latest
+
+    # --- STEPS ---
+    # These are the specific commands the robot will run, in order.
+    steps:
+      # Step 1: Get the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the tools (Node.js)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use Node.js version 20
+
+      # Step 3: Install all the project packages (like React)
+      - name: Install Dependencies
+        run: npm install
+
+      # Step 4: Build the website! This turns your .tsx code into plain HTML/JS/CSS.
+      # The result is saved in a new folder called "build".
+      - name: Build Project
+        run: npm run build
+
+      # Step 5: Upload the finished website to Hostinger!
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          # Use the secret keys we created earlier.
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          
+          # This is important! We ONLY want to upload the contents of the "build" folder.
+          local-dir: ./build/
+
+          # And we want to put them in the main website folder on Hostinger.
+          server-dir: ./public_html/
